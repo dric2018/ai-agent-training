@@ -1,0 +1,22 @@
+services:
+  training-env:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: llm_training_workspace
+    ports:
+      - "8888:8888" # Jupyter Lab workspace interface
+      - "8000:8000" # vLLM Local OpenAI-Compatible Server
+    volumes:
+      - .:/workspace
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_fallback_key}
+      - OPENAI_BASE_URL=http://vllm-backend:8000/v1 # Points LangChain/OpenAI SDK to local vLLM instance when needed
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all # Allocates host GPUs to the container for running local vLLM execution instances
+              capabilities: [gpu]
+    restart: unless-stopped

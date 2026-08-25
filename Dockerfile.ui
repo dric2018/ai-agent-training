@@ -1,0 +1,42 @@
+# Use a slim Python image for the frontend
+FROM python:3.13-slim
+
+# Install system dependencies for PDF processing (LibGL for OpenCV, etc.)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY pyproject.toml .
+
+RUN mkdir src
+
+# Copy your application code
+COPY ./src/chat_app.py src/chat_app.py
+COPY ./src/__init__.py src/__init__.py
+COPY ./src/config.py src/config.py
+
+RUN pip install -e . --no-cache-dir 
+#-vv
+
+RUN python3 -c "import nltk; nltk.download(['punkt', 'punkt_tab', 'averaged_perceptron_tagger', 'averaged_perceptron_tagger_eng'])"
+
+# Expose Streamlit's default port
+EXPOSE 8501
+
+# Healthcheck to tell Docker when the UI is actually "Up"
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+
+
+# Run with headless settings for Docker
+CMD ["streamlit", "run", "src/chat_app.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--server.headless=true", \
+     "--server.enableCORS=false",\
+      "--server.enableXsrfProtection=false",\
+     "--browser.gatherUsageStats=false"]
