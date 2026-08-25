@@ -36,7 +36,7 @@ class Agent(abc.ABC):
         self.llm = ChatOpenAI(
             openai_api_base=vllm_url, 
             # base_url=f"http://localhost:{CFG.VLLM_PORT}/v1",
-            api_key=CFG.OPEN_API_KEY,
+            api_key=CFG.OPENAI_API_KEY,
             max_completion_tokens=CFG.MAX_TOKENS,
             temperature=CFG.GENERATION_TEMPERATURE,
             model=CFG.BASE_MODEL,

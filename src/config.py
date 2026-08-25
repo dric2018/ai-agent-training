@@ -33,7 +33,7 @@ class CFG:
     SERVER_IP               = str(os.getenv("SERVER_IP", "127.0.0.1"))
     USERNAME                = os.getenv("USERNAME", "")
     DOCKER_CON_IP           = "http://host.docker.internal"
-    OPEN_API_KEY            = os.getenv("OPEN_API_KEY", "token-is-ignored")
+    OPENAI_API_KEY          = os.getenv("OPENAI_API_KEY", "token-is-ignored")
     HF_TOKEN                = os.getenv('HF_TOKEN', '')
     BASE_URL                = f"http://{SERVER_IP}:{LLM_BACKEND_PORT}/v1"
 
