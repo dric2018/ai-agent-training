@@ -11,3 +11,6 @@ pip install -r requirements.txt
 https://docs.astral.sh/uv/#highlights
 
 sur mac/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+## Activer l'environnement viruel
+source .venv/bin/activate 
