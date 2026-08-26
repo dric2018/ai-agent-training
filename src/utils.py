@@ -1,4 +1,10 @@
 import streamlit as st 
+from src import logger
+import re
+from src.config import CFG
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 def parse_thinking_stream(stream):
     thinking_expander = st.expander("Show Reasoning", expanded=True)
@@ -29,83 +35,16 @@ def parse_thinking_stream(stream):
             
     return full_thinking, full_response
 
-def render_agent_response(response):
-    """
-    Renders the built-in <think> monologue, the investigation steps, 
-    and the final data/interpretation.
-    """
 
-    logger.info("Preparing for final response rendering...")
+def calc_similarity(text1, text2):
+    # Vectorize the text documents
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform([text1, text2])
 
-    if hasattr(response, "content"):
-        response = response.content
+    # Compute cosine similarity between the first and second vector
+    similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
 
-    if not isinstance(response, dict):
-        response = response.model_dump()
+    score = similarity[0][0]
+    print(f"TF-IDF Cosine Similarity: {similarity[0][0]:.4f}")
 
-    # HANDLE BUILT-IN MODEL THINKING (<think> tags)
-    raw_text = response.get("interpretation") or response.get("content", "")
-    
-    logger.info("Checking for internal throughts 💭...")
-
-    if isinstance(raw_text, str) and "<think>" in raw_text:
-        match = re.search(r"<think>(.*?)</think>\s*(.*)", raw_text, re.DOTALL)
-        if match:
-            think_text = match.group(1).strip()
-            final_text = match.group(2).strip()
-            
-            # with st.expander("💭 Model Internal Monologue", expanded=False):
-            st.markdown(think_text)
-            
-            # Show the "cleaned" interpretation without the tags
-            st.markdown(final_text)
-        else:
-            st.markdown(raw_text)
-    else:
-        # If no think tags, just show the text
-        st.markdown(raw_text)
-
-    logger.info("Gathering investigation steps...")
-    if CFG.DEBUG_MODE:
-        if "steps" in response and response["steps"]:
-            with st.expander("🔍 Investigation Path (Tools used)", expanded=False):
-                for i, step in enumerate(response["steps"]):
-                    st.markdown(f"**Step {i+1}:** {step}")
-
-    # HANDLE DATA & VISUALS
-    logger.info("Finalizing...")
-    if response["type"] == "data":
-        intent = response.get("intent")
-
-        with st.expander("💻 Generated SQL Query"):
-            st.code(response["final_sql"], language="sql")
-    
-        if intent.value == QueryIntent.CHART.value:
-            df = response["data"]
-            with st.expander("🖼️ Visualization"):
-                # Heuristic Chart Selection
-                fig = px.bar(df, x=df.columns[0], y=df.columns[1], title="Election Insights")
-
-                cols = df.columns
-                num_rows = len(df)
-                
-                # If we have a category and a number, and only a few rows -> PIE is great for "Parts of a whole"
-                if len(cols) >= 2 and num_rows <= 6:
-                    fig = px.pie(df, names=cols[0], values=cols[1], title="Election Insights")
-                    
-                # If we have a single numeric column with many values -> HISTOGRAM for "Frequency"
-                elif len(cols) == 1 and pd.api.types.is_numeric_dtype(df[cols[0]]):
-                    fig = px.histogram(df, x=cols[0], title="Election Insights")
-                    
-                # Default fallback: BAR for comparisons
-                else:
-                    fig = px.bar(df, x=cols[0], y=cols[1] if len(cols) > 1 else None, 
-                                title="Election Insights")
-
-                st.plotly_chart(fig, use_container_width=True)
-
-        with st.expander("📊 View Raw Data"):
-            st.dataframe(response["data"])
-
-    # if response["type"] == "error":
-    #     st.error(response["content"])
+    return score

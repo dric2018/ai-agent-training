@@ -33,9 +33,10 @@ class CFG:
     SERVER_IP               = str(os.getenv("SERVER_IP", "127.0.0.1"))
     USERNAME                = os.getenv("USERNAME", "")
     DOCKER_CON_IP           = "http://host.docker.internal"
-    OPENAI_API_KEY          = os.getenv("OPENAI_API_KEY", "token-is-ignored")
+    API_KEY                 = os.getenv("OPENAI_API_KEY", "token-is-ignored")
     HF_TOKEN                = os.getenv('HF_TOKEN', '')
-    BASE_URL                = f"http://{SERVER_IP}:{LLM_BACKEND_PORT}/v1"
+    # BASE_URL                = f"http://{SERVER_IP}:{LLM_BACKEND_PORT}/v1"
+    BASE_URL                = str(os.getenv("RUNPOD_API_URL", ""))
 
     # DB Paths
     DB_DIR                  = osp.join(PROJECT_ROOT, "storage/duckdb")
@@ -51,12 +52,12 @@ class CFG:
     
     # LLM (vLLM) Settings
     IS_STREAM               = False
-    BASE_MODEL              = os.getenv("BASE_MODEL", "Qwen/Qwen3-1.7B")
+    BASE_MODEL              = os.getenv("BASE_MODEL", "Qwen/Qwen3-4B-Instruct-2507")
     EMBEDDING_MODEL_NAME    = "google/embeddinggemma-300m" #"sentence-transformers/all-MiniLM-L6-v2" (384d)
     TARGET_EMBEDDING_DIM    = 512
     MODEL_PROVIDER          = "openai"
     RELEVANCE_THRESHOLD     = 0.8 
-    GENERATION_TEMPERATURE  = 0.3 
+    GENERATION_TEMPERATURE  = 0.3 # 1 for reasoning models
     MAX_MODEL_LEN           = os.getenv("MAX_MODEL_LEN", 32000)
     MAX_TOKENS              = 4096
     CHUNK_SIZE              = 256
