@@ -1,22 +1,150 @@
 services:
-  training-env:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: llm_training_workspace
-    ports:
-      - "8888:8888" # Jupyter Lab workspace interface
-      - "8000:8000" # vLLM Local OpenAI-Compatible Server
-    volumes:
-      - .:/workspace
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_fallback_key}
-      - OPENAI_BASE_URL=http://vllm-backend:8000/v1 # Points LangChain/OpenAI SDK to local vLLM instance when needed
+  # Foundations
+  vllm-gpu:
+    image: ${VLLM_IMAGE}
+    container_name: vllm
+    runtime: nvidia
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all # Allocates host GPUs to the container for running local vLLM execution instances
-              capabilities: [gpu]
+              count: all
+              capabilities: [gpu]    
+    ipc: host
+    shm_size: '4gb'
+    ports:
+      - "${LLM_API_PORT}:8000"
+    profiles: ["gpu"]         
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      # - models:/root/.cache/huggingface
+      #-e VLLM_WORKER_MULTIPROC_METHOD=spawn
+      # --reasoning-parser qwen3
+      # -e VLLM_CPU_KVCACHE_SPACE=8
+    command: >
+      --model ${BASE_MODEL}
+      --host 0.0.0.0
+      --dtype float16
+      --trust-remote-code
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_xml
+      --max-model-len ${MAX_MODEL_LEN}
+      --no-enable-expert-parallel 
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - VLLM_LOGGING_LEVEL=DEBUG
+      - NVIDIA_VISIBLE_DEVICES=all
+      # - VLLM_ENABLE_CUDA_COMPATIBILITY=1      
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # - LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/lib/x86_64-linux-gnu   
+    networks:
+      backend-net:
+        aliases:
+          - vllm
+      monitoring_network: {}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 30s
+      retries: 50     
+      start_period: 60s
     restart: unless-stopped
+
+  # vllm-cpu:
+  #   image: ${VLLM_IMAGE}
+  #   container_name: vllm
+  #   shm_size: '4gb'
+  #   ports:
+  #     - "${VLLM_PORT}:8000"
+  #   profiles: ["cpu"]         
+  #   volumes:
+  #     - ~/.cache/huggingface:/root/.cache/huggingface
+  #     #-e VLLM_WORKER_MULTIPROC_METHOD=spawn
+  #     # --reasoning-parser qwen3
+  #   command: >
+  #     -e VLLM_CPU_KVCACHE_SPACE=8
+  #     --model ${BASE_MODEL}
+  #     --host 0.0.0.0
+  #     --dtype float16
+  #     --trust-remote-code
+  #     --enable-auto-tool-choice
+  #     --tool-call-parser qwen3_xml
+  #     --max-model-len ${MAX_MODEL_LEN}
+  #     --no-enable-expert-parallel 
+  #   environment:
+  #     - HF_TOKEN=${HF_TOKEN}
+  #     - VLLM_LOGGING_LEVEL=DEBUG
+  #   networks:
+  #     backend-net:
+  #       aliases:
+  #         - vllm
+  #     monitoring_network: {}
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 15s
+  #     timeout: 30s
+  #     retries: 50     
+  #     start_period: 60s
+  #   restart: unless-stopped
+
+  # Access/UI
+  streamlit-app:
+    container_name: streamlit-app
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    environment:
+      - BASE_MODEL=${BASE_MODEL}
+      - VLLM_URL=http://vllm:8000/v1
+        # - DB_PATH=/app/data/elections.duckdb
+    expose:
+      - "8501" # making sure service is only accessible through Nginx
+      - "8001"
+    ports:
+      - 8001:8001     
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+    volumes:
+      - .:/app
+    networks:
+      - backend-net
+      - monitoring_network
+    depends_on:
+      vllm-gpu:
+        condition: service_healthy
+        required: false
+      vllm-cpu:
+        condition: service_healthy
+        required: false      
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf 
+    ports:
+      - "${NGINX_PORT:-8080}:80"
+    command: >
+      /bin/sh -c "apk add --no-cache apache2-utils && 
+                  htpasswd -bc /etc/nginx/.htpasswd ${USERNAME} ${VLLM_API_KEY} && 
+                  exec nginx -g 'daemon off;'"     
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+    networks:
+      - backend-net
+      - monitoring_network
+    depends_on:
+      streamlit-app: 
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  backend-net:
+    driver: bridge
+  monitoring_network:
+    driver: bridge
+    
+volumes:
+  models:
+      driver: local
