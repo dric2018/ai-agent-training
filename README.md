@@ -12,5 +12,5 @@ https://docs.astral.sh/uv/#highlights
 
 sur mac/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-## Activer l'environnement viruel
+## Activer l'environnement virtuel
 source .venv/bin/activate 
