@@ -20,8 +20,7 @@ def get_project_root() -> Path:
 class CFG:
     PROJECT_ROOT            = get_project_root()
     LOGS_DIR                = osp.join(PROJECT_ROOT, "logs")
-    DATA_DIR                = osp.join(PROJECT_ROOT, "data")
-    PROCESSED_DATA_DIR      = osp.join(DATA_DIR, "processed")
+    DATA_DIR                = osp.join(PROJECT_ROOT, "data/french-customer-review-sentiment-free-2k")
 
     DEBUG_MODE              = True
 

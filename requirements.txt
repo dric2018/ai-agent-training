@@ -2,6 +2,7 @@ python-dotenv
 langchain
 langchain-openai
 langchain-ollama
+langchain-community
 pandas
 numpy
 streamlit
