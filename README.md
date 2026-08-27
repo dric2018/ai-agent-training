@@ -25,3 +25,17 @@ source .venv/bin/activate
 ### Git Bash / WSL
 
 source venv/Scripts/activate
+
+
+### Installer n8n en local
+
+NB: Vous aurez besoin d'avoir `nodeJS` déjà installer
+````bash 
+npm install n8n -g
+````
+
+````bash 
+n8n start
+````
+
+Vous pouvez accéder à l'interface via: `http://localhost:5678`
