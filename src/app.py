@@ -8,14 +8,13 @@ from utils import generate_random_session_name
 
 import random
 
+from __init__ import logger
+
 st.set_page_config(
     page_title="OCI Voice - Copilote Avis Clients", page_icon="", layout="wide"
 )
 
 st.title("OCI Voice : Assistant d'Analyse des Avis Clients")
-st.markdown(
-    "Dataset : *French Customer Review Sentiment*"
-)
 
 # initialize agent with the hybrid search tool
 agent_executor = init_agent()
@@ -93,10 +92,12 @@ with col_chat:
   if user_query := st.chat_input(
       "Posez votre question sur les avis clients..."
   ):
+    
     # Afficher le message utilisateur
     st.session_state.messages_history[current_thread_id].append(
         {"role": "user", "content": user_query}
     )
+
     with st.chat_message("user"):
       st.markdown(user_query)
 
@@ -128,7 +129,7 @@ with col_chat:
           res = agent_executor.invoke(input_messages, config)
         full_response = res["messages"][-1].content
         message_placeholder.markdown(full_response)
-
+  
     # Sauvegarde de la réponse de l'assistant
     st.session_state.messages_history[current_thread_id].append(
         {"role": "assistant", "content": full_response}
