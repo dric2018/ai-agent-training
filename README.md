@@ -118,6 +118,14 @@ La date et l'heure de ce jour est {{ $now }}.
 
 Ce prompt ajoute des contraintes de format strictes (nombre de phrases, utilisation de listes à puces) et un exemple d'ancrage pour forcer l'agent à être ultra-court.
 
+
+### Rajoiyer un output parser
+````
+{
+  "thinking": "Ton raisonnement étape par étape (en français).",
+  "final_answer": "Le message clair et concis à envoyer à l'utilisateur."
+}
+```
 ### Prompts à tester sur n8n
 
 ![Workflow n8n](imgs/n8n_projet.png)
