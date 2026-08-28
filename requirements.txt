@@ -3,8 +3,11 @@ langchain
 langchain-openai
 langchain-ollama
 langchain-community
+langgraph
 pandas
 numpy
 streamlit
 jupyterlab-rise
 scikit-learn
+chromadb
+rank_bm25
