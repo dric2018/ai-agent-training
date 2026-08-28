@@ -1,13 +1,9 @@
-import os
 import streamlit as st
-from langchain_community.document_loaders import CSVLoader
-from langchain_community.vectorstores import Chroma
-from langchain_ollama import ChatOllama
-from langchain_core.messages import HumanMessage, SystemMessage
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph import create_react_agent
+from langchain_core.messages import HumanMessage
 
-from src.vectorstore import init_vectorstore
+from agent import init_agent
+from vectorstore import init_vectorstore
+
 
 st.set_page_config(
     page_title="OCI Voice - Copilote Avis Clients", page_icon="🧡", layout="wide"
@@ -19,30 +15,7 @@ st.markdown(
 )
 
 retriever = init_vectorstore()
-
-
-# ==========================================
-# 3. CONFIGURATION DE L'AGENT LANGGRAPH
-# ==========================================
-@st.cache_resource
-def init_agent():
-  model = ChatOllama(model="mistral:7b", temperature=0.1)
-  
-  memory = MemorySaver()
-
-  system_prompt = SystemMessage(
-      content="""Tu es "OCI Voice", l'assistant virtuel expert en analyse de la relation client 
-    pour Orange Côte d'Ivoire. Analyse les retours du dataset French Customer Review Sentiment. 
-    Base tes réponses strictement sur les faits, sois précis, concis et structure tes analyses par thématiques (Réseau, Facturation, Service Client)."""
-    )
-
-  # Création de l'agent ReAct de LangGraph
-  agent_executor = create_react_agent(
-      model=model, tools=[], checkpointer=memory, prompt=system_prompt
-  )
-  return agent_executor
-
-
+# initialize agent
 agent_executor = init_agent()
 
 st.sidebar.title("💬 Conversations")
@@ -144,9 +117,11 @@ with col_chat:
             full_response = latest_msg.content
             message_placeholder.markdown(full_response)
 
-      # Si pas de réponse directe via le stream d'updates, fallback sur invoke
+      # Si pas de réponse directe via le stream d'updates, fallback sur 
+      # ke
       if not full_response:
-        res = agent_executor.invoke(input_messages, config)
+        with st.spinner("En train de réfléchir..."):
+          res = agent_executor.invoke(input_messages, config)
         full_response = res["messages"][-1].content
         message_placeholder.markdown(full_response)
 

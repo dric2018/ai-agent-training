@@ -1,14 +1,21 @@
 import json
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
+from langchain_community.document_loaders import CSVLoader
+from langchain_community.vectorstores import Chroma
+
+from tqdm import tqdm
 
 import os
 import streamlit as st
 
+from config import CFG
+
 def load_jsonl_to_docs(file_path: str) -> list[Document]:
   documents = []
   with open(file_path, "r", encoding="utf-8") as f:
-    for line in f:
+    for line in tqdm(f):
       if line.strip():
         data = json.loads(line)
 
@@ -48,6 +55,7 @@ def init_vectorstore():
 
   embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
   vectorstore = Chroma.from_documents(docs, embeddings)
+
   return vectorstore.as_retriever(
-      search_kwargs={"k": 2}
+      search_kwargs={"k": CFG.NUM_RAG_DOCS}
   )  # Récupère les 2 avis les plus pertinents

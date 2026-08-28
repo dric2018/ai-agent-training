@@ -26,8 +26,7 @@ class CFG:
 
     # Server settings
     UI_PORT                 = os.getenv("UI_PORT", 8501)
-    NGINX_PORT              = os.getenv("NGINX_PORT", "8080")
-    LLM_BACKEND_PORT        = os.getenv("VLLM_PORT", "8000")
+    LLM_BACKEND_PORT        = os.getenv("LLM_API_PORT", "8000")
 
     SERVER_IP               = str(os.getenv("SERVER_IP", "127.0.0.1"))
     USERNAME                = os.getenv("USERNAME", "")
@@ -35,34 +34,17 @@ class CFG:
     API_KEY                 = os.getenv("OPENAI_API_KEY", "token-is-ignored")
     HF_TOKEN                = os.getenv('HF_TOKEN', '')
     # BASE_URL                = f"http://{SERVER_IP}:{LLM_BACKEND_PORT}/v1"
-    BASE_URL                = str(os.getenv("RUNPOD_API_URL", ""))
-
-    # DB Paths
-    DB_DIR                  = osp.join(PROJECT_ROOT, "storage/duckdb")
-    DB_NAME                 = "clients.duckdb"
-    DB_PATH                 = osp.join(DB_DIR, DB_NAME)
     
-    # SQL Guardrails
-    ALLOWED_TABLES          = [
-                               ]
-    # DB
-    SQL_MAX_LIMIT           = 20
     TOP_K                   = 10
     
     # LLM (vLLM) Settings
-    IS_STREAM               = False
-    BASE_MODEL              = os.getenv("BASE_MODEL", "Qwen/Qwen3-4B-Instruct-2507")
+    BASE_MODEL              = "mistral:7b"
     EMBEDDING_MODEL_NAME    = "google/embeddinggemma-300m" #"sentence-transformers/all-MiniLM-L6-v2" (384d)
     TARGET_EMBEDDING_DIM    = 512
     MODEL_PROVIDER          = "openai"
-    RELEVANCE_THRESHOLD     = 0.8 
     GENERATION_TEMPERATURE  = 0.3 # 1 for reasoning models
-    MAX_MODEL_LEN           = os.getenv("MAX_MODEL_LEN", 32000)
-    MAX_TOKENS              = 4096
-    CHUNK_SIZE              = 256
-    CHUNK_OVERLAP           = 100
     REASONING_EFFORT        = "low" # Options: "low", "medium", "high"
-    MAX_ITERATIONS          = 18
+    MAX_ITERATIONS          = 10
     TIMEOUT                 = 300
 
 
