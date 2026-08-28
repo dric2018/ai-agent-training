@@ -120,7 +120,7 @@ Ce prompt ajoute des contraintes de format strictes (nombre de phrases, utilisat
 
 
 ### Rajoiyer un output parser
-````
+```
 {
   "thinking": "Ton raisonnement étape par étape (en français).",
   "final_answer": "Le message clair et concis à envoyer à l'utilisateur."
