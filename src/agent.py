@@ -15,7 +15,10 @@ from config import CFG
 from pprint import pprint
 import os
 
+from tools import search_past_reviews
 import streamlit as st
+
+from __init__ import logger
 
 load_dotenv()
 
@@ -33,12 +36,11 @@ def init_agent():
   maintenant = datetime.now(tz_abidjan)
   today = maintenant.strftime("%d/%m/%Y à %H:%M")
 
+  logger.info("Création de l'agent...")
   with open(os.path.join(CFG.PROJECT_ROOT, "prompts/system_prompt_OCI_Voice.txt"), "r") as f:
     prompt = f.read()
 
-  prompt = prompt.format(today=today)
-  pprint(prompt)
-  
+  prompt = prompt.format(today=today)  
   system_prompt = SystemMessage(
       content=prompt
     )
@@ -46,10 +48,13 @@ def init_agent():
   # Création de l'agent ReAct de LangGraph
   agent = create_agent(
       model=model, 
-      tools=[], 
+      tools=[search_past_reviews], 
       checkpointer=memory, 
       system_prompt=system_prompt
   )
+
+  logger.info("Agent créé avec sucès!")
+  
   return agent
 
 

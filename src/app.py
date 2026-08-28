@@ -2,20 +2,22 @@ import streamlit as st
 from langchain_core.messages import HumanMessage
 
 from agent import init_agent
-from vectorstore import init_vectorstore
+from tools import hybrid_retriever
 
+from utils import generate_random_session_name
+
+import random
 
 st.set_page_config(
-    page_title="OCI Voice - Copilote Avis Clients", page_icon="🧡", layout="wide"
+    page_title="OCI Voice - Copilote Avis Clients", page_icon="", layout="wide"
 )
 
-st.title("🧡 OCI Voice : Assistant d'Analyse des Avis Clients")
+st.title("OCI Voice : Assistant d'Analyse des Avis Clients")
 st.markdown(
-    "Dataset : *French Customer Review Sentiment* | Orange Côte d'Ivoire"
+    "Dataset : *French Customer Review Sentiment*"
 )
 
-retriever = init_vectorstore()
-# initialize agent
+# initialize agent with the hybrid search tool
 agent_executor = init_agent()
 
 st.sidebar.title("💬 Conversations")
@@ -29,13 +31,16 @@ if "current_thread_name" not in st.session_state:
   st.session_state.current_thread_name = "Session Principale"
 
 # Bouton pour créer une nouvelle conversation
-new_chat_name = st.sidebar.text_input("Nom de la nouvelle session", "")
 if st.sidebar.button("➕ Créer une nouvelle session"):
-  if new_chat_name:
-    thread_id = f"thread_{len(st.session_state.threads) + 1}"
-    st.session_state.threads[new_chat_name] = thread_id
-    st.session_state.current_thread_name = new_chat_name
-    st.rerun()
+  session_name = generate_random_session_name()
+  # S'assurer que le nom est unique
+  while session_name in st.session_state.threads:
+    session_name = f"{generate_random_session_name()}-{random.randint(10, 99)}"  
+
+  thread_id = f"thread_{len(st.session_state.threads) + 1}"
+  st.session_state.threads[session_name] = thread_id
+  st.session_state.current_thread_name = session_name
+  st.rerun()
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Historique des sessions")
@@ -71,7 +76,7 @@ if "last_retrieved_docs" not in st.session_state:
   st.session_state.last_retrieved_docs = {}
 
 
-# Afficher un appercu des documents
+# Afficher un aperçu des documents
 col_chat, col_docs = st.columns([2, 1])
 
 with col_chat:
@@ -95,8 +100,8 @@ with col_chat:
     with st.chat_message("user"):
       st.markdown(user_query)
 
-    # Récupération des documents pertinents (RAG Retriever) pour l'aperçu
-    retrieved_docs = retriever.invoke(user_query)
+    # Récupération des documents pertinents via le retriever hybride pour l'aperçu UI
+    retrieved_docs = hybrid_retriever.invoke(user_query)
     st.session_state.last_retrieved_docs[current_thread_id] = retrieved_docs
 
     # Exécution de l'agent LangGraph avec persistance de la mémoire (thread_id)
@@ -117,8 +122,7 @@ with col_chat:
             full_response = latest_msg.content
             message_placeholder.markdown(full_response)
 
-      # Si pas de réponse directe via le stream d'updates, fallback sur 
-      # ke
+      # Si pas de réponse directe via le stream d'updates, fallback sur invoke
       if not full_response:
         with st.spinner("En train de réfléchir..."):
           res = agent_executor.invoke(input_messages, config)

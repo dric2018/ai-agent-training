@@ -36,10 +36,13 @@ class CFG:
     # BASE_URL                = f"http://{SERVER_IP}:{LLM_BACKEND_PORT}/v1"
     
     TOP_K                   = 10
+
+    # VECTOR DATABASE
+    DB_DIR                  = osp.join(PROJECT_ROOT, "storage/chroma_db")
     
     # LLM (vLLM) Settings
     BASE_MODEL              = "mistral:7b"
-    EMBEDDING_MODEL_NAME    = "google/embeddinggemma-300m" #"sentence-transformers/all-MiniLM-L6-v2" (384d)
+    EMBEDDING_MODEL_NAME    = "text-embedding-3-small"
     TARGET_EMBEDDING_DIM    = 512
     MODEL_PROVIDER          = "openai"
     GENERATION_TEMPERATURE  = 0.3 # 1 for reasoning models

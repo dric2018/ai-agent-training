@@ -1,40 +1,25 @@
-import streamlit as st 
-from src import logger
-import re
-from src.config import CFG
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-def parse_thinking_stream(stream):
-    thinking_expander = st.expander("Show Reasoning", expanded=True)
-    thinking_container = thinking_expander.empty()
-    response_container = st.empty()
+import random
 
-    full_thinking = ""
-    full_response = ""
-    is_thinking = False
+def generate_random_session_name():
+    # Listes de mots pour générer des noms de sessions thématiques et sympas
+    adjectifs = [
+        "Alpha",
+        "Beta",
+        "Optima",
+        "Nova",
+        "Nexus",
+        "Quantum",
+        "Apex",
+        "Sigma",
+    ]
+    domaines = ["Réseau", "Facturation", "Support", "Fibre", "Mobile", "Client"]
+    suffixes = ["Express", "Voice", "Insight", "Analytics", "Pro"]
 
-    for chunk in stream:
-        content = chunk.choices[0].delta.content or ""
-        
-        if "<think>" in content:
-            is_thinking = True
-            content = content.replace("<think>", "")
-            
-        if "</think>" in content:
-            is_thinking = False
-            content = content.replace("</think>", "")
-
-        if is_thinking:
-            full_thinking += content
-            thinking_container.markdown(full_thinking)
-        else:
-            full_response += content
-            response_container.markdown(full_response)
-            
-    return full_thinking, full_response
-
+    return f"{random.choice(adjectifs)}-{random.choice(domaines)}-{random.choice(suffixes)}"
 
 def calc_similarity(text1, text2):
     # Vectorize the text documents

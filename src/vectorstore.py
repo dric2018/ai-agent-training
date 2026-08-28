@@ -33,7 +33,7 @@ def load_jsonl_to_docs(file_path: str) -> list[Document]:
 
 
 @st.cache_resource
-def init_vectorstore():
+def init_vectorstore(search_type:str):
   """Charge le dataset .jsonl et initialise ChromaDB pour le RAG."""
   jsonl_path = "french_customer_reviews.jsonl"
 
@@ -59,3 +59,6 @@ def init_vectorstore():
   return vectorstore.as_retriever(
       search_kwargs={"k": CFG.NUM_RAG_DOCS}
   )  # Récupère les 2 avis les plus pertinents
+
+
+__all__ = ["vectorstore", "docs", "embeddings"]
