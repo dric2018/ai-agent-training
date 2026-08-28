@@ -120,9 +120,8 @@ Ce prompt ajoute des contraintes de format strictes (nombre de phrases, utilisat
 
 ### Prompts à tester sur n8n
 
-<figure align="center">
-  <img src="imgs/n8n_projet.png" alt="Project Screenshot" width="500">
-</figure>
+![Workflow n8n](imgs/n8n_projet.png)
+
 
 > Des incidents sur le réseau rapportés en ce jour ?
 
@@ -146,9 +145,7 @@ python ingest.py
 streamlit run app.py
 ```
 
-<figure align="center">
-  <img src="imgs/app.png" alt="Project Screenshot" width="500">
-</figure>
+![app Full code](imgs/app.png)
 
 ### Prompts de test pour OCI Voice (RAG):
 
