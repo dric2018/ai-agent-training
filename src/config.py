@@ -35,13 +35,13 @@ class CFG:
     HF_TOKEN                = os.getenv('HF_TOKEN', '')
     # BASE_URL                = f"http://{SERVER_IP}:{LLM_BACKEND_PORT}/v1"
     
-    TOP_K                   = 10
+    TOP_K                   = 3
 
     # VECTOR DATABASE
     DB_DIR                  = osp.join(PROJECT_ROOT, "storage/chroma_db")
     
     # LLM (vLLM) Settings
-    BASE_MODEL              = "mistral:7b"
+    BASE_MODEL              = os.getenv('BASE_MODEL', "mistral:7b")
     EMBEDDING_MODEL_NAME    = "text-embedding-3-small"
     TARGET_EMBEDDING_DIM    = 512
     MODEL_PROVIDER          = "openai"

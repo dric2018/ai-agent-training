@@ -10,6 +10,27 @@ import random
 
 from __init__ import logger
 
+from prometheus_client import Counter, Histogram, start_http_server
+import time
+from config import CFG
+
+# # Démarrer un serveur HTTP Prometheus en arrière-plan 
+# # À lancer une seule fois au démarrage de l'application
+# try:
+#   start_http_server(CFG.PROMETHEUS_PORT)
+# except Exception:
+#   pass  # Évite les erreurs si le port est déjà pris lors d'un rerun Streamlit
+
+# # Définition des métriques clés
+# REQUEST_COUNTER = Counter(
+#     "streamlit_chat_requests_total",
+#     "Nombre total de requêtes envoyées au copilote OCI",
+# )
+# LATENCY_HISTOGRAM = Histogram(
+#     "streamlit_request_duration_seconds",
+#     "Temps de réponse de l'agent LangGraph",
+# )
+
 st.set_page_config(
     page_title="OCI Voice - Copilote Avis Clients", page_icon="", layout="wide"
 )
@@ -92,6 +113,8 @@ with col_chat:
   if user_query := st.chat_input(
       "Posez votre question sur les avis clients..."
   ):
+    # REQUEST_COUNTER.inc()  # Incrémente le compteur Prometheus
+    start_time = time.time()
     
     # Afficher le message utilisateur
     st.session_state.messages_history[current_thread_id].append(
@@ -117,19 +140,24 @@ with col_chat:
       for step in agent_executor.stream(
           input_messages, config, stream_mode="updates"
       ):
-        if "agent" in step and "messages" in step["agent"]:
-          latest_msg = step["agent"]["messages"][-1]
+        if "model" in step and "messages" in step["model"]:
+          latest_msg = step["model"]["messages"][-1]
+          logger.info(f"[Streaming update]: {latest_msg.content}")
           if latest_msg.content:
             full_response = latest_msg.content
             message_placeholder.markdown(full_response)
 
       # Si pas de réponse directe via le stream d'updates, fallback sur invoke
-      if not full_response:
+      if full_response=="":
         with st.spinner("En train de réfléchir..."):
           res = agent_executor.invoke(input_messages, config)
         full_response = res["messages"][-1].content
         message_placeholder.markdown(full_response)
-  
+
+    # Enregistrement de la latence dans l'histogramme Prometheus
+    duration = time.time() - start_time
+    # LATENCY_HISTOGRAM.observe(duration)
+
     # Sauvegarde de la réponse de l'assistant
     st.session_state.messages_history[current_thread_id].append(
         {"role": "assistant", "content": full_response}

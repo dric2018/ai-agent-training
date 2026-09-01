@@ -29,7 +29,7 @@ hybrid_retriever = EnsembleRetriever(
 )
 
 @tool
-def search_past_reviews(query: str, search_type:str="hybrid") -> str:
+def search_past_reviews(query: str, search_type:str="semantic") -> str:
     """
     Effectue une recherche hybride (sémantique + mots-clés) dans la base 
     de données des avis clients passés d'Orange Côte d'Ivoire.
