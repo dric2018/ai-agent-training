@@ -36,7 +36,7 @@ def search_past_reviews(query: str, search_type:str="semantic") -> str:
 
     search_type: soit "hybrid", "semantic", ou "keyword"
     """
-    assert search_type in [ "hybrid", "semantic", "keyword"], f"Le type de recherche que vous voulez utiliser ({search_type}) n'est pas supporté"
+    assert search_type in ["hybrid", "semantic", "keyword"], f"Le type de recherche que vous voulez utiliser ({search_type}) n'est pas supporté"
 
     if search_type=="hybrid":
         docs = hybrid_retriever.invoke(query)
