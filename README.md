@@ -204,9 +204,28 @@ docker compose version # pour vérivier la version installée
 apt-get update
 ```
 
-### Construire le container pour l'API LLM (vLLM)
+### Construire les conteneurs pour l'API LLM (vLLM)
 NB: Assurez-vous d'être à la racine du projet
+
+Plusieurs scripts bash simples (voir le dossier `scripts`) seront utilisés pour exécuter les commande de déploiement de nos services.
+
 ```bash
-docker-compose up
+./scripts/build_containers.sh
+# constuit les conteneurs et installe les dépendances requises pour:
+# vllm
+# streamlit-app
+# grafana (dashboard)
+# prometheus (récupération des métriques)
+# nginx (reverse proxy)
 ```
+
+|Service|URL|
+|---|---|
+|Streamlit UI (via Nginx)| http://localhost:8080/|
+|vLLM API   |http://localhost:8000/v1/|
+|vLLM metrics   |http://localhost:8000/metrics|
+|Grafana (dashboards)	|http://localhost:3000|
+|Prometheus	|http://localhost:9090|
+
+PS: Si l'application est déployée sur un serveur distant, les services seront accessibles à l'adresse `http://${CFG.SERVER_IP}:${CFG.LLM_API_PORT}`, comme indiqué dans le fichier `.env`. Il est conseillé de vérifier votre console cloud pour connaître les nouveaux ports attribués, comme c'est généralement le cas pour les services tels que `Vast.ai`.
 
