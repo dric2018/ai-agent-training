@@ -10,26 +10,29 @@ import random
 
 from __init__ import logger
 
-from prometheus_client import Counter, Histogram, start_http_server
 import time
-from config import CFG
 
-# # Démarrer un serveur HTTP Prometheus en arrière-plan 
-# # À lancer une seule fois au démarrage de l'application
-# try:
-#   start_http_server(CFG.PROMETHEUS_PORT)
-# except Exception:
-#   pass  # Évite les erreurs si le port est déjà pris lors d'un rerun Streamlit
+st.markdown(
+    """
+    <style>
+    /* Cible le conteneur global de st.chat_input pour l'isoler dans la colonne de gauche (environ 66% de largeur) */
+    div[data-testid="stChatInput"] {
+        position: fixed !important;
+        bottom: 20px !important;
+        left: 8rem !important;
+        width: 55% !important;
+        max-width: 55% !important;
+        z-index: 1000;
+    }
+    /* Ajoute un espace vide en bas du conteneur principal pour voir le dernier message */
+    .block-container {
+        padding-bottom: 100px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-# # Définition des métriques clés
-# REQUEST_COUNTER = Counter(
-#     "streamlit_chat_requests_total",
-#     "Nombre total de requêtes envoyées au copilote OCI",
-# )
-# LATENCY_HISTOGRAM = Histogram(
-#     "streamlit_request_duration_seconds",
-#     "Temps de réponse de l'agent LangGraph",
-# )
 
 st.set_page_config(
     page_title="OCI Voice - Copilote Avis Clients", page_icon="", layout="wide"
@@ -103,7 +106,7 @@ with col_chat:
   st.subheader(
       f"Discussion en cours : `{st.session_state.current_thread_name}`"
   )
-
+  
   # Affichage de l'historique des messages de la session active
   for message in st.session_state.messages_history[current_thread_id]:
     with st.chat_message(message["role"]):

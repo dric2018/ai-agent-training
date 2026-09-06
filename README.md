@@ -163,5 +163,50 @@ streamlit run app.py
 
 > pourquoi ma fibre ne passe pas depuis près de 2 semaines ?
 
+## Déploiement et Monitoring
+### Installer docker
 
+```bash
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+
+
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo systemctl restart docker
+```
+
+### Installer docker-compose
+
+```bash
+apt install docker-compose
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+
+mkdir -p $DOCKER_CONFIG/cli-plugins
+
+curl -SL https://github.com/docker/compose/releases/download/v5.0.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+docker compose version # pour vérivier la version installée
+
+apt-get update
+```
+
+### Construire le container pour l'API LLM (vLLM)
+NB: Assurez-vous d'être à la racine du projet
+```bash
+docker-compose up
+```
 

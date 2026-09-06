@@ -41,7 +41,7 @@ class CFG:
     DB_DIR                  = osp.join(PROJECT_ROOT, "storage/chroma_db")
     
     # LLM (vLLM) Settings
-    BASE_MODEL              = os.getenv('BASE_MODEL', "mistral:7b")
+    BASE_MODEL              = os.getenv('BASE_MODEL', "Qwen/Qwen3-0.6B")
     EMBEDDING_MODEL_NAME    = "text-embedding-3-small"
     TARGET_EMBEDDING_DIM    = 512
     MODEL_PROVIDER          = "openai"

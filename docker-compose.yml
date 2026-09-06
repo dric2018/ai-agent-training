@@ -1,28 +1,68 @@
 services:
   # Foundations
-  vllm-gpu:
-    image: ${VLLM_IMAGE}
+  # vllm-gpu:
+  #   image: vllm/vllm-openai:latest
+  #   container_name: vllm
+  #   runtime: nvidia
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]    
+  #   ipc: host
+  #   shm_size: '4gb'
+  #   ports:
+  #     - "${LLM_API_PORT}:8000"
+  #   volumes:
+  #     - ~/.cache/huggingface:/root/.cache/huggingface
+  #     # - models:/root/.cache/huggingface
+  #     #-e VLLM_WORKER_MULTIPROC_METHOD=spawn
+  #     # --reasoning-parser qwen3
+  #     # -e VLLM_CPU_KVCACHE_SPACE=8
+  #   command: >
+  #     --model ${BASE_MODEL}
+  #     --host 0.0.0.0
+  #     --dtype float16
+  #     --trust-remote-code
+  #     --enable-auto-tool-choice
+  #     --tool-call-parser qwen3_xml
+  #     --max-model-len ${MAX_MODEL_LEN}
+  #     --no-enable-expert-parallel 
+  #   environment:
+  #     - HF_TOKEN=${HF_TOKEN}
+  #     - VLLM_LOGGING_LEVEL=DEBUG
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     # - VLLM_ENABLE_CUDA_COMPATIBILITY=1      
+  #     - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  #     # - LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/lib/x86_64-linux-gnu   
+  #   networks:
+  #     backend-net:
+  #       aliases:
+  #         - vllm
+  #     monitoring_network: {}
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #     interval: 15s
+  #     timeout: 30s
+  #     retries: 50     
+  #     start_period: 60s
+  #   restart: unless-stopped
+
+  vllm:
+    image: openeuler/vllm-cpu:latest
     container_name: vllm
-    runtime: nvidia
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]    
-    ipc: host
     shm_size: '4gb'
     ports:
       - "${LLM_API_PORT}:8000"
-    profiles: ["gpu"]         
+    # profiles: ["cpu"]         
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
-      # - models:/root/.cache/huggingface
       #-e VLLM_WORKER_MULTIPROC_METHOD=spawn
       # --reasoning-parser qwen3
-      # -e VLLM_CPU_KVCACHE_SPACE=8
     command: >
+      -e VLLM_CPU_KVCACHE_SPACE=8
       --model ${BASE_MODEL}
       --host 0.0.0.0
       --dtype float16
@@ -34,10 +74,6 @@ services:
     environment:
       - HF_TOKEN=${HF_TOKEN}
       - VLLM_LOGGING_LEVEL=DEBUG
-      - NVIDIA_VISIBLE_DEVICES=all
-      # - VLLM_ENABLE_CUDA_COMPATIBILITY=1      
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      # - LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/lib/x86_64-linux-gnu   
     networks:
       backend-net:
         aliases:
@@ -51,42 +87,49 @@ services:
       start_period: 60s
     restart: unless-stopped
 
-  # vllm-cpu:
-  #   image: ${VLLM_IMAGE}
-  #   container_name: vllm
-  #   shm_size: '4gb'
-  #   ports:
-  #     - "${VLLM_PORT}:8000"
-  #   profiles: ["cpu"]         
-  #   volumes:
-  #     - ~/.cache/huggingface:/root/.cache/huggingface
-  #     #-e VLLM_WORKER_MULTIPROC_METHOD=spawn
-  #     # --reasoning-parser qwen3
-  #   command: >
-  #     -e VLLM_CPU_KVCACHE_SPACE=8
-  #     --model ${BASE_MODEL}
-  #     --host 0.0.0.0
-  #     --dtype float16
-  #     --trust-remote-code
-  #     --enable-auto-tool-choice
-  #     --tool-call-parser qwen3_xml
-  #     --max-model-len ${MAX_MODEL_LEN}
-  #     --no-enable-expert-parallel 
-  #   environment:
-  #     - HF_TOKEN=${HF_TOKEN}
-  #     - VLLM_LOGGING_LEVEL=DEBUG
-  #   networks:
-  #     backend-net:
-  #       aliases:
-  #         - vllm
-  #     monitoring_network: {}
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-  #     interval: 15s
-  #     timeout: 30s
-  #     retries: 50     
-  #     start_period: 60s
-  #   restart: unless-stopped
+# Observability
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command: '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]      
+      interval: 10s
+      timeout: 5s
+      retries: 5   
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - monitoring_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    environment:
+      - GF_SERVER_HTTP_ADDR=0.0.0.0    
+      - GF_PROVISIONING_PATH=/etc/grafana/provisioning
+      - GF_SECURITY_ADMIN_USER=admin
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      prometheus: 
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - monitoring_network
 
   # Access/UI
   streamlit-app:
@@ -111,12 +154,13 @@ services:
       - backend-net
       - monitoring_network
     depends_on:
-      vllm-gpu:
+      vllm:
         condition: service_healthy
-        required: false
-      vllm-cpu:
+        required: false   
+      prometheus:
         condition: service_healthy
-        required: false      
+      grafana:
+        condition: service_healthy
 
   nginx:
     image: nginx:alpine
@@ -127,7 +171,7 @@ services:
       - "${NGINX_PORT:-8080}:80"
     command: >
       /bin/sh -c "apk add --no-cache apache2-utils && 
-                  htpasswd -bc /etc/nginx/.htpasswd ${USERNAME} ${VLLM_API_KEY} && 
+                  htpasswd -bc /etc/nginx/.htpasswd ${USERNAME} ${PASSWORD} && 
                   exec nginx -g 'daemon off;'"     
     extra_hosts:
       - "host.docker.internal:host-gateway"  
@@ -148,3 +192,5 @@ networks:
 volumes:
   models:
       driver: local
+  grafana_data:
+  prometheus_data:

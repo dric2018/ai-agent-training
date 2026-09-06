@@ -5,7 +5,6 @@ description = "Training module environment for LLM API testing and LangChain int
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "openai>=1.0.0",
     "langchain-core>=0.3.0",
     "langchain-openai>=0.3.0",
     "vllm>=0.6.0; platform_system == 'Linux'",  # vLLM natively targets Linux/CUDA environments

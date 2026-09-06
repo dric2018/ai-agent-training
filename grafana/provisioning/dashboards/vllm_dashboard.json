@@ -1,0 +1,174 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Monitoring vLLM Inference Server",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "title": "LLM Performance & Workload Monitoring",
+  "tags": ["LLM", "vLLM", "Monitoring"],
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "prometheus" },
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Total Requests Completed",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(vllm:request_success_total)", "legendFormat": "Success" }],
+      "options": { "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "title": "Total Tokens (Gen / Prompt)",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        { "expr": "sum(vllm:generation_tokens_total)", "legendFormat": "Generated" },
+        { "expr": "sum(vllm:prompt_tokens_total)", "legendFormat": "Prompt" }
+      ]
+    },
+    {
+      "title": "Avg Tokens per Request",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sum(vllm:generation_tokens_total) / (sum(vllm:request_success_total) or vector(1))" }]
+    },
+    {
+      "title": "Blocked Security Violations",
+      "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "round(sum(increase(rag_sql_security_violations_total[$__range])))" }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "User Perceived Latency (P95)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(vllm:e2e_request_latency_seconds_bucket[5m])) by (le))", "legendFormat": "E2E Latency" },
+        { "expr": "histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le))", "legendFormat": "TTFT" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "title": "System Throughput (Tokens/s)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [{ "expr": "sum(rate(vllm:generation_tokens_total[1m]))", "legendFormat": "Throughput" }]
+    },
+    {
+      "title": "Workload Distribution (Running vs Waiting)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "vllm:num_requests_running", "legendFormat": "Running" },
+        { "expr": "vllm:num_requests_waiting", "legendFormat": "Waiting (Queued)" }
+      ]
+    },
+    {
+      "title": "vLLM CPU Usage",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 20 },
+      "targets": [{ 
+        "expr": "avg(rate(process_cpu_seconds_total[1m]) * 100)", 
+        "legendFormat": "vLLM Process CPU %" 
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 85 }] } }
+      }
+    },
+    {
+      "title": "Process Memory (RSS)",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 20 },
+      "targets": [{ 
+        "expr": "sum(process_resident_memory_bytes) / 1024 / 1024 / 1024",
+        "legendFormat": "vLLM RAM (GB)" 
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "decbytes", "custom": { "drawStyle": "area", "fillOpacity": 20 } }
+      }
+    },
+    {
+      "title": "KV Cache Usage (Hybrid)",
+      "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [{ 
+        "expr": "avg(vllm:kv_cache_usage_perc OR vllm:cpu_cache_usage_perc OR on() vector(0)) * 100",
+        "legendFormat": "KV Cache %" 
+      }],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "max": 100 }
+      }
+    },
+    {
+    "title": "Cache Hit Rate (Prefix Caching)",
+    "type": "gauge",
+    "datasource": { "type": "prometheus", "uid": "${datasource}" },
+    "gridPos": { "h": 8, "w": 9, "x": 15, "y": 20 },
+    "targets": [
+      {
+        "expr": "(sum(rate(vllm:prefix_cache_hits_total[5m])) / sum(rate(vllm:prefix_cache_queries_total[5m]))) * 100",
+        "legendFormat": "Hit Rate %"
+      }
+    ],
+    "fieldConfig": {
+      "defaults": {
+        "unit": "percent",
+        "min": 0,
+        "max": 100,
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            { "color": "red", "value": null },
+            { "color": "orange", "value": 40 },
+            { "color": "green", "value": 70 }
+          ]
+        }
+      }
+    }
+  }
+
+  ],
+  "schemaVersion": 38
+}

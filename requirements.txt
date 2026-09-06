@@ -4,6 +4,7 @@ langchain-openai
 langchain-ollama
 langchain-community
 langgraph
+grandalf
 pandas
 numpy
 streamlit
