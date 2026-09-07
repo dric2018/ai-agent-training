@@ -229,3 +229,15 @@ Plusieurs scripts bash simples (voir le dossier `scripts`) seront utilisés pour
 
 PS: Si l'application est déployée sur un serveur distant, les services seront accessibles à l'adresse `http://${CFG.SERVER_IP}:${CFG.LLM_API_PORT}`, comme indiqué dans le fichier `.env`. Il est conseillé de vérifier votre console cloud pour connaître les nouveaux ports attribués, comme c'est généralement le cas pour les services tels que `Vast.ai`.
 
+## Resources additionelles
+* Enregistrement [Jour 5 (Session 2) - Module 7 et Fin](https://drive.google.com/file/d/1QGz6fyEXZygtdleBJg0OROz1uLe8LGR6/view?usp=sharing)
+
+* Documentation officielle n8n : Guide complet pour comprendre comment intégrer des agents, des outils et des modèles de langage dans des workflows visuels low-code.
+
+* Tutoriels et templates n8n AI : Bibliothèque officielle de modèles prêts à l'emploi pour créer des agents conversationnels et des assistants RAG https://n8n.io/workflows/categories/ai/.
+
+* Blog et cas d'usage n8n sur l'IA : Articles pratiques détaillant la mise en place d'architectures multi-agents et la connexion aux bases vectorielles https://blog.n8n.io/tag/ai/.
+
+* Cours DeepLearning.AI (en ligne) : Formations de référence sur les fondamentaux des LLM et le développement d'agents autonomes, dispensées par Andrew Ng [DeepLearning.AI](https://www.deeplearning.ai/).
+
+* MIT Introduction à l’apprentissage profond: [MIT 6S191 sur Youtube (Anglais)](https://youtube.com/playlist?list=PLtBw6njQRU-rwp5__7C0oIVt26ZgjG9NI&si=T4cN295Q-C9uhanz)
